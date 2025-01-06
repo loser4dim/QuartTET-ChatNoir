@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 env_logger = { version = "0.11.6" }
-winit      = { version = "0.30.8", features = ["default", "rwh_05"]}
+winit      = { version = "0.30.8", features = ["default", "rwh_06"]}
