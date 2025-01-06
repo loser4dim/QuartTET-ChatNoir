@@ -1,6 +1,8 @@
 [package]
-name = "QuartTET-ChatNoir"
-version = "0.1.0"
+name    = "QuartTET-ChatNoir"
+version = "0.3.9"
 edition = "2021"
 
 [dependencies]
+env_logger = { version = "0.11.6" }
+winit      = { version = "0.30.8", features = ["default", "rwh_05"]}
