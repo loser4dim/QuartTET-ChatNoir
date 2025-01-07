@@ -263,27 +263,23 @@ impl winit::application::ApplicationHandler for UserInterface {
 }
 
 fn load_icon_image() -> Option<winit::window::Icon> {
-    let mut icon_image: Vec<u8> = Vec::new();
-    icon_image.push(57);
-    icon_image.push(197);
-    icon_image.push(187);
-    icon_image.push(255);
-    icon_image.push(255);
-    icon_image.push(0);
-    icon_image.push(0);
-    icon_image.push(255);
-    icon_image.push(0);
-    icon_image.push(255);
-    icon_image.push(0);
-    icon_image.push(255);
-    icon_image.push(0);
-    icon_image.push(0);
-    icon_image.push(255);
-    icon_image.push(255);
-
-    match winit::window::Icon::from_rgba(icon_image, 2, 2) {
-        Ok(icon) => {
-            return Some(icon);
+    match image::ImageReader::open("./icon/icon.bmp") {
+        Ok(image) => match image.decode() {
+            Ok(image) => {
+                let width  = image.width();
+                let height = image.height();
+                match winit::window::Icon::from_rgba(image.into_rgba8().into_raw(), width, height) {
+                    Ok(image) => {
+                        return Some(image);
+                    }
+                    Err(_) => {
+                        return None;
+                    }
+                };
+            }
+            Err(_) => {
+                return None;
+            }
         }
         Err(_) => {
             return None;

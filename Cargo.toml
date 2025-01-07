@@ -12,3 +12,4 @@ wgpu                = "23.0.1"
 imgui               = "0.12.0"
 imgui-winit-support = "0.13.0"
 imgui-wgpu          = {path = "libs/imgui-wgpu-rs"}
+image = "0.25.5"
