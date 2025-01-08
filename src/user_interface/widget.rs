@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 pub struct Widget {
     context    : imgui::Context,
     platform   : imgui_winit_support::WinitPlatform,
@@ -7,7 +9,7 @@ pub struct Widget {
 
 impl Widget {
     pub fn new(window: &winit::window::Window, surface_conf: &wgpu::SurfaceConfiguration, device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
-        let mut context  = imgui::Context::create();
+        let mut context = imgui::Context::create();
         context.set_ini_filename(None);
 
         let mut platform = imgui_winit_support::WinitPlatform::new(&mut context);
@@ -40,7 +42,7 @@ impl Widget {
         self.platform.handle_event(self.context.io_mut(), &window, &event);
     }
 
-    pub fn draw<'a>(&'a mut self, window: &winit::window::Window, device: &wgpu::Device, queue: &wgpu::Queue, render_pass: &mut wgpu::RenderPass<'a>) {
+    pub fn draw<'w>(&'w mut self, window: &winit::window::Window, device: &wgpu::Device, queue: &wgpu::Queue, render_pass: &mut wgpu::RenderPass<'w>) {
         let now_time = std::time::Instant::now();
         self.context.io_mut().update_delta_time(now_time - self.last_frame);
         self.last_frame = now_time;
@@ -65,6 +67,9 @@ impl Widget {
 
         let widget = self.context.frame();
         {
+            
+
+
             /*let imgui_window = widget.window("Hello world");
             imgui_window.build(|| {
                 widget.text("Hello world!");

@@ -7,9 +7,11 @@ edition = "2021"
 log                 = "0.4.22"
 env_logger          = "0.11.6"
 tokio               = { version = "1.42.0", features = ["full"] }
-winit               = "0.30.8"
+image               = "0.25.5"
+bytemuck            = "1.21.0"
+winit               = { version = "0.30.8", features = ["rwh_05", "rwh_06"] }
 wgpu                = "23.0.1"
 imgui               = "0.12.0"
 imgui-winit-support = "0.13.0"
-imgui-wgpu          = {path = "libs/imgui-wgpu-rs"}
-image = "0.25.5"
+imgui-wgpu          = { path = "libs/imgui-wgpu-rs" }
+cgmath = "0.18.0"

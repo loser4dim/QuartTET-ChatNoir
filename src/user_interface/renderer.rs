@@ -1,25 +1,31 @@
-mod widget;
+
 mod camera;
 mod mesh_model;
 
+use std::sync::Arc;
+
 use wgpu::util::DeviceExt;
 
-pub struct Window {
-    window_core : std::sync::Arc<winit::window::Window>,
-    surface_conf: wgpu::SurfaceConfiguration,
+use crate::user_interface::widget::Widget;
+
+pub struct Renderer {
+    //window_core : std::sync::Arc<winit::window::Window>,
     surface     : wgpu::Surface<'static>,
+    surface_conf: wgpu::SurfaceConfiguration,
+    
     device      : wgpu::Device,
     queue       : wgpu::Queue,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     render_pipeline: wgpu::RenderPipeline,
-    widget      : widget::Widget,
     camera: camera::Camera,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup
 }
 
-impl Window {
+impl Renderer {
+    
+
     pub fn new(window: &std::sync::Arc<winit::window::Window>) -> Self {
         let tokio_runtime = match tokio::runtime::Runtime::new() {
             Ok(runtime) => runtime,
@@ -77,9 +83,6 @@ impl Window {
             view_formats                 : vec![wgpu::TextureFormat::Rgba8UnormSrgb]
         };
         surface.configure(&device, &surface_conf);
-
-        //Create Widget
-        let widget = widget::Widget::new(&window, &surface_conf, &device, &queue);
 
 
         let mesh_model = mesh_model::MeshModel3D::new();
@@ -202,7 +205,7 @@ impl Window {
             cache: None
         });
 
-        return Window{window_core: window.clone(), surface_conf, surface, device, queue, vertex_buffer, index_buffer, render_pipeline, widget, camera, camera_buffer, camera_bind_group};
+        return Self{surface_conf, surface, device, queue, vertex_buffer, index_buffer, render_pipeline, camera, camera_buffer, camera_bind_group};
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -215,9 +218,11 @@ impl Window {
             _ => height
         };
         self.surface.configure(&self.device, &self.surface_conf);
+
+        self.camera.resize(width as f32, height as f32);
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, window: &winit::window::Window, widget: &mut Widget) {
         //Get Frame to Draw
         let current_frame = match self.surface.get_current_texture() {
             Ok(frame)  => frame,
@@ -272,23 +277,17 @@ impl Window {
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.draw_indexed(0..12, 0, 0..1);
 
-            let widget = &mut self.widget;
-            widget.draw(&self.window_core, &self.device, &self.queue, &mut render_pass);
+            
+            widget.draw(&window, &self.device, &self.queue, &mut render_pass);
         }
 
     
         self.queue.submit(Some(command_encoder.finish()));
         current_frame.present();
     }
-
     
-
-    pub fn handle_event(&mut self, event: &winit::event::Event<()>) {
-        let widget = &mut self.widget;
-        widget.handle_event(&self.window_core, &event);
+    pub fn get_widget_required(&self) -> (&wgpu::SurfaceConfiguration, &wgpu::Device, &wgpu::Queue) {
+        return (&self.surface_conf, &self.device, &self.queue);
     }
-
-    pub fn request_redraw(&mut self) {
-        self.window_core.request_redraw();
-    }
+    
 }
