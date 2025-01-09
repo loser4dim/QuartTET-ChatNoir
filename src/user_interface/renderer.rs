@@ -12,9 +12,9 @@ pub struct Renderer {
     //window_core : std::sync::Arc<winit::window::Window>,
     surface     : wgpu::Surface<'static>,
     surface_conf: wgpu::SurfaceConfiguration,
-    
     device      : wgpu::Device,
     queue       : wgpu::Queue,
+    
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     render_pipeline: wgpu::RenderPipeline,
@@ -25,6 +25,10 @@ pub struct Renderer {
 
 impl Renderer {
     
+
+    pub fn move_camera(&mut self, x: f64, y: f64) {
+        self.camera.moving(x, y);
+    }
 
     pub fn new(window: &std::sync::Arc<winit::window::Window>) -> Self {
         let tokio_runtime = match tokio::runtime::Runtime::new() {
@@ -100,6 +104,7 @@ impl Renderer {
             [0, 2, 3]
         ];*/
 
+        
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor{label: Some("Vertex Buffer"), contents: bytemuck::cast_slice(&vertices), usage: wgpu::BufferUsages::VERTEX});
 
         let index_buffer = device.create_buffer_init(
@@ -251,12 +256,24 @@ impl Renderer {
         let view                = current_frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut command_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor{label: None});
 
+
+
+
+        self.queue.write_buffer(&self.camera_buffer, 0, bytemuck::cast_slice(&self.camera.calc_vp_matrix()));
+        
+
+
+
+
+
+
+
         {
 
 
+            let (r, g, b, a) = widget.background_color();
 
-
-            let background_color = wgpu::Color{r: 57.0 / 255.0, g: 197.0 / 255.0, b : 187.0 / 255.0, a: 1.0};
+            let background_color = wgpu::Color{r, g, b, a};
             let render_operation = wgpu::Operations{load: wgpu::LoadOp::Clear(background_color), store: wgpu::StoreOp::Store};
 
             let mut render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -281,7 +298,6 @@ impl Renderer {
             widget.draw(&window, &self.device, &self.queue, &mut render_pass);
         }
 
-    
         self.queue.submit(Some(command_encoder.finish()));
         current_frame.present();
     }

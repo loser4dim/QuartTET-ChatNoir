@@ -1,3 +1,5 @@
+use std::f64::consts;
+
 pub struct Camera {
     eye: [f32;3],
     target: [f32;3],
@@ -5,16 +7,53 @@ pub struct Camera {
     aspect: f32,
     fovy: f32,
     znear: f32,
-    zfar: f32
+    zfar: f32,
+
+
+    state: CameraState
+}
+
+struct CameraState {
+    theta: f64,
+    phi: f64
 }
 
 
 impl Camera {
-    
+    pub fn moving(&mut self, x: f64, y: f64) {
+        println!("{}, {}", x, y);
+        self.state.phi   = self.state.phi + x / 200.0;
+        self.state.theta = self.state.theta + y / 200.0;
+        let r = 5.0;
+
+        if self.state.theta < 0.0 {
+            self.state.theta = f64::EPSILON;
+        }
+        if self.state.theta > consts::PI {
+            self.state.theta = consts::PI - f64::EPSILON;
+        }
+
+        if self.state.phi < 0.0 {
+            self.state.phi = f64::EPSILON;
+        }
+        else if self.state.phi > 2.0 * consts::PI {
+            self.state.phi =  2.0 * consts::PI - f64::EPSILON;
+        }
+
+        
+        self.eye[0] = (r * self.state.theta.sin() * self.state.phi.cos()) as f32;
+        self.eye[1] = (r * self.state.theta.sin() * self.state.phi.sin()) as f32;
+        self.eye[2] = (r * self.state.theta.cos()) as f32;
+    }
 
     pub fn new() -> Self{
+        let theta = consts::PI / 3.0;
+        let phi = consts::PI / 6.0;
+        let state = CameraState {theta, phi};
+        let r = 5.0;
+
         let target: [f32;3] = [0.0, 0.0, 0.0];
-        let eye: [f32;3] = [1.0, 1.0, 2.0];
+        let eye: [f32;3] = [(r * theta.sin() * phi.cos()) as f32, (r * theta.sin() * phi.sin()) as f32, (r * theta.cos()) as f32];
         let up: [f32;3] = [0.0, 0.0, 1.0];
 
         let aspect: f32 = 1.0;
@@ -22,11 +61,11 @@ impl Camera {
         let znear: f32 = 0.1;
         let zfar: f32 = 100.0;
 
-        return Self{target, eye, up, aspect, fovy, znear, zfar};
+        return Self{target, eye, up, aspect, fovy, znear, zfar, state};
     }
 
     pub fn resize(&mut self, width: f32, height: f32) {
-        self.aspect = height / width;
+        self.aspect = width / height;
     }
 
     fn calc_view_matrix(&self) -> [[f32;4];4] {

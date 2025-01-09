@@ -17,8 +17,7 @@ struct VertexOutput {
 fn vs_main(vin: VertexInput) -> VertexOutput {
     var vout: VertexOutput;
     vout.clip_position = camera.view_proj * vec4<f32>(vin.position, 1.0);
-    vout.color = (vin.position + vec3<f32>(1.0, 1.0, 1.0)) / 2.0;
-    vout.color = vec3<f32>(1.0, vout.color[0], vout.color[1]);
+    vout.color = vin.position;
     return vout;
 }
 

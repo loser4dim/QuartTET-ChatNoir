@@ -11,7 +11,9 @@ use winit::{
         StartCause,
         WindowEvent,
         DeviceId,
-        DeviceEvent
+        DeviceEvent,
+        ElementState,
+        MouseButton
     },
     keyboard::{
         Key,
@@ -23,7 +25,15 @@ use winit::{
 pub struct UserInterface {
     window  : Option<Arc<winit::window::Window>>,
     renderer: Option<renderer::Renderer>,
-    widget  : Option<widget::Widget>
+    widget  : Option<widget::Widget>,
+    state   : UserInterfaceState
+}
+
+struct UserInterfaceState {
+    is_clicked_left : bool,
+    is_clicked_right: bool,
+    cursor_position_x: f64,
+    cursor_position_y: f64
 }
 
 impl UserInterface {
@@ -33,7 +43,8 @@ impl UserInterface {
     const ICON_IMAGE_PATH_NAME: &str = "./icon/icon.bmp";
 
     pub fn new() -> Self {
-        return UserInterface{ window: None, renderer: None, widget: None};
+        let state = UserInterfaceState {is_clicked_left: false, is_clicked_right: false, cursor_position_x: 0.0, cursor_position_y: 0.0};
+        return UserInterface{ window: None, renderer: None, widget: None, state};
     }
 
     fn load_icon_image(file_path: &std::path::Path) -> Option<winit::window::Icon> {
@@ -75,6 +86,9 @@ impl UserInterface {
         if let Some(renderer) = self.renderer.as_mut() {
             renderer.resize(width, height);
         }
+        if let Some(widget) = self.widget.as_mut() {
+            widget.resize((width as f32) / 4.0, height as f32);
+        }
     }
 
     fn draw(&mut self,) {
@@ -82,6 +96,7 @@ impl UserInterface {
             if let Some(window) = &self.window {
                 if let Some(widget) = self.widget.as_mut() {
                     renderer.draw(&window, widget);
+                    widget.update();
                 }
             }
             
@@ -156,10 +171,24 @@ impl winit::application::ApplicationHandler for UserInterface {
             WindowEvent::Ime(_event) => {
                 //println!("Window {:?} - IME: {:?}", window_id, event);
             }
-            WindowEvent::CursorMoved{device_id: _, position: _} => {
-                //println!("Window {:?} - Cursor Moved", window_id);
-                //println!("    Device ID: {:?}", device_id);
-                //println!("    Position : {:?}", position);
+            WindowEvent::CursorMoved{device_id: _, position} => {
+                if let Some(widget) = &self.widget {
+                    if !widget.is_hovered() {
+                        if self.state.is_clicked_left {
+                            if let Some(renderer) = self.renderer.as_mut() {
+                                renderer.move_camera(position.x - self.state.cursor_position_x, position.y - self.state.cursor_position_y);
+                            }
+                        }
+                        if self.state.is_clicked_right {
+                            if let Some(renderer) = self.renderer.as_mut() {
+                                
+                            }
+                        }
+                    }
+                }
+                
+                self.state.cursor_position_x = position.x;
+                self.state.cursor_position_y = position.y;
             }
             WindowEvent::CursorEntered{device_id: _} => {
                 //println!("Window {:?} - Cursor Entered: {:?}", window_id, device_id);
@@ -173,11 +202,20 @@ impl winit::application::ApplicationHandler for UserInterface {
                 //println!("    Delta    : {:?}", delta);
                 //println!("    Phase    : {:?}", phase);
             }
-            WindowEvent::MouseInput{device_id: _, state: _, button: _} => {
-                //println!("Window {:?} - Mouse Input", window_id);
-                //println!("    Device ID: {:?}", device_id);
-                //println!("    State    : {:?}", state);
-                //println!("    button   : {:?}", button);
+            WindowEvent::MouseInput{device_id: _, state, button} => {
+                let is_clicked = match state {
+                    ElementState::Pressed  => true,
+                    ElementState::Released => false
+                };
+                match button {
+                    MouseButton::Left => {
+                        self.state.is_clicked_left = is_clicked;
+                    }
+                    MouseButton::Right => {
+                        self.state.is_clicked_right = is_clicked;
+                    }
+                    _ => {}
+                }
             }
             WindowEvent::PinchGesture{device_id: _, delta: _, phase: _} => {
                 //println!("Window {:?} - Pinch Gesture", window_id);
